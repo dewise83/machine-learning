@@ -1,0 +1,184 @@
+---
+title: "Machine Learning Course Project"
+author: "Dean Wise"
+date: "April 13, 2016"
+output: html_document
+---
+
+##Prepping/Cleaning the Data
+
+First I am going to load libraries, set the seed,  and load the data:
+
+```{r}
+library(caret); library(kernlab)
+set.seed(83)
+training <- read.csv("pml-training.csv", na.strings=c("", "NA", "#DIV/0!"))
+test <- read.csv("pml-testing.csv", na.strings=c("", "NA", "#DIV/0!"))
+```
+
+Next let's partition the data:
+
+```{r}
+inTrain <- createDataPartition(training$classe, p=0.75, list=FALSE)
+training2 <- training[inTrain, ]
+testing2 <- training[-inTrain, ]
+dim(training2)
+dim(testing2)
+```
+
+We can now use nearZeroVar() to get rid of near zero variance variables, which can often break models we would want to use. 
+
+```{r}
+
+nzv <- nearZeroVar(training2, saveMetrics=TRUE)
+training2 <- training2[,nzv$nzv==FALSE]
+
+nzv<- nearZeroVar(testing2,saveMetrics=TRUE)
+testing2 <- testing2[,nzv$nzv==FALSE]
+
+```
+
+There is now an index column in the training and testing data, which we need to remove:
+```{r}
+training2 <- training2[c(-1)]
+testing2 <- testing2[c(-1)]
+```
+
+There are a lot of columns that still have a large portion of NA's. We are going to remove any column that is made up of at least 75% NA's. Once we have those columns, we can them map them onto the test set so the columns align. 
+
+Remove columns with 75% NA's:
+```{r}
+
+training3 <- training2
+for(i in 1:length(training2)) {
+    if( sum( is.na( training2[, i] ) ) /nrow(training2) >= .75) {
+        for(j in 1:length(training3)) {
+            if( length( grep(names(training2[i]), names(training3)[j]) ) == 1)  {
+                training3 <- training3[ , -j]
+            }   
+        } 
+    }
+}
+
+training2 <- training3
+
+```
+
+Now we want to map the columns from the training2 set onto the testing data sets:
+```{r}
+
+headers <- colnames(training2)
+testing2 <- testing2[headers]
+test <- test[headers[1:57]]
+
+```
+
+Now the only issue left is that the classes of the columns between our training and testing do not align. So we need to make them the same class:
+
+```{r}
+
+for (i in 1:length(test) ) {
+    for(j in 1:length(training2)) {
+        if( length(grep(names(training2[i]), names(test)[j])) == 1)  {
+            class(test[j]) <- class(training2[i])
+        }      
+    }      
+}
+
+test <- rbind(training2[2, -58] , test)
+test <- test[-1,]
+
+```
+
+
+##Predicting With the Data
+
+
+#https://rpubs.com/DIM302/PracticalMachineLearning
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
