@@ -10,7 +10,8 @@ output: html_document
 First I am going to load libraries, set the seed,  and load the data:
 
 ```{r}
-library(caret); library(kernlab)
+setwd("~/Desktop/R Scripts/machine")
+library(caret); library(kernlab); library(rpart); library(randomForest)
 set.seed(83)
 training <- read.csv("pml-training.csv", na.strings=c("", "NA", "#DIV/0!"))
 test <- read.csv("pml-testing.csv", na.strings=c("", "NA", "#DIV/0!"))
@@ -93,12 +94,34 @@ test <- test[-1,]
 
 ##Predicting With the Data
 
+We are going to try and use decision trees and random forrests to predict with our data. Which ever has a higher accuracy will be the one we choose. First, Decision trees:
 
-#https://rpubs.com/DIM302/PracticalMachineLearning
+```{r}
 
+set.seed(83)
 
+fit1 <- train(classe ~ ., data = training2, method = "rpart")
+predict1 <- predict(fit1, testing2)
+confuse <- confusionMatrix(predict1, testing2$classe)
+confuse
+```
 
+An accuracy of .63 is fairly weak. Let's look at a random forrest
 
+```{r}
+set.seed(83)
+fit2 <- randomForest(classe ~ ., data=training2)
+predict2 <- predict(fit2, testing2)
+confuse2 <- confusionMatrix(predict2, testing2$classe)
+confuse2
+```
+
+Here we have an accuracy of .9994 which is very strong. Hence, we will use our random forest prediction. We would also expect a sample error of 0.06% from the calculation: ((1-.9994)*100). Now lets use this model on our test data. 
+```{r}
+
+finalpredict <- predict(fit2, test)
+finalpredict
+```
 
 
 

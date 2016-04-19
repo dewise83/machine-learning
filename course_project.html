@@ -71,9 +71,12 @@ img {
 <div id="preppingcleaning-the-data" class="section level2">
 <h2>Prepping/Cleaning the Data</h2>
 <p>First I am going to load libraries, set the seed, and load the data:</p>
-<pre class="r"><code>library(caret); library(kernlab)</code></pre>
+<pre class="r"><code>setwd(&quot;~/Desktop/R Scripts/machine&quot;)
+library(caret); library(kernlab); library(rpart); library(randomForest)</code></pre>
 <pre><code>## Loading required package: lattice
-## Loading required package: ggplot2</code></pre>
+## Loading required package: ggplot2
+## randomForest 4.6-12
+## Type rfNews() to see new features/changes/bug fixes.</code></pre>
 <pre class="r"><code>set.seed(83)
 training &lt;- read.csv(&quot;pml-training.csv&quot;, na.strings=c(&quot;&quot;, &quot;NA&quot;, &quot;#DIV/0!&quot;))
 test &lt;- read.csv(&quot;pml-testing.csv&quot;, na.strings=c(&quot;&quot;, &quot;NA&quot;, &quot;#DIV/0!&quot;))</code></pre>
@@ -123,6 +126,90 @@ test &lt;- test[headers[1:57]]</code></pre>
 
 test &lt;- rbind(training2[2, -58] , test)
 test &lt;- test[-1,]</code></pre>
+</div>
+<div id="predicting-with-the-data" class="section level2">
+<h2>Predicting With the Data</h2>
+<p>We are going to try and use decision trees and random forrests to predict with our data. Which ever has a higher accuracy will be the one we choose. First, Decision trees:</p>
+<pre class="r"><code>set.seed(83)
+
+fit1 &lt;- train(classe ~ ., data = training2, method = &quot;rpart&quot;)
+predict1 &lt;- predict(fit1, testing2)
+confuse &lt;- confusionMatrix(predict1, testing2$classe)
+confuse</code></pre>
+<pre><code>## Confusion Matrix and Statistics
+## 
+##           Reference
+## Prediction    A    B    C    D    E
+##          A 1052  218   27   30    9
+##          B   86  415   10    0    0
+##          C   78  153  454   22   38
+##          D  174  163  364  752  424
+##          E    5    0    0    0  430
+## 
+## Overall Statistics
+##                                           
+##                Accuracy : 0.6327          
+##                  95% CI : (0.6191, 0.6463)
+##     No Information Rate : 0.2845          
+##     P-Value [Acc &gt; NIR] : &lt; 2.2e-16       
+##                                           
+##                   Kappa : 0.5391          
+##  Mcnemar's Test P-Value : NA              
+## 
+## Statistics by Class:
+## 
+##                      Class: A Class: B Class: C Class: D Class: E
+## Sensitivity            0.7541  0.43730  0.53099   0.9353  0.47725
+## Specificity            0.9191  0.97573  0.92813   0.7256  0.99875
+## Pos Pred Value         0.7874  0.81213  0.60940   0.4006  0.98851
+## Neg Pred Value         0.9039  0.87844  0.90358   0.9828  0.89461
+## Prevalence             0.2845  0.19352  0.17435   0.1639  0.18373
+## Detection Rate         0.2145  0.08462  0.09258   0.1533  0.08768
+## Detection Prevalence   0.2724  0.10420  0.15192   0.3827  0.08870
+## Balanced Accuracy      0.8366  0.70651  0.72956   0.8305  0.73800</code></pre>
+<p>An accuracy of .63 is fairly weak. Let’s look at a random forrest</p>
+<pre class="r"><code>set.seed(83)
+fit2 &lt;- randomForest(classe ~ ., data=training2)
+predict2 &lt;- predict(fit2, testing2)
+confuse2 &lt;- confusionMatrix(predict2, testing2$classe)
+confuse2</code></pre>
+<pre><code>## Confusion Matrix and Statistics
+## 
+##           Reference
+## Prediction    A    B    C    D    E
+##          A 1395    0    0    0    0
+##          B    0  949    3    0    0
+##          C    0    0  852    0    0
+##          D    0    0    0  804    0
+##          E    0    0    0    0  901
+## 
+## Overall Statistics
+##                                           
+##                Accuracy : 0.9994          
+##                  95% CI : (0.9982, 0.9999)
+##     No Information Rate : 0.2845          
+##     P-Value [Acc &gt; NIR] : &lt; 2.2e-16       
+##                                           
+##                   Kappa : 0.9992          
+##  Mcnemar's Test P-Value : NA              
+## 
+## Statistics by Class:
+## 
+##                      Class: A Class: B Class: C Class: D Class: E
+## Sensitivity            1.0000   1.0000   0.9965   1.0000   1.0000
+## Specificity            1.0000   0.9992   1.0000   1.0000   1.0000
+## Pos Pred Value         1.0000   0.9968   1.0000   1.0000   1.0000
+## Neg Pred Value         1.0000   1.0000   0.9993   1.0000   1.0000
+## Prevalence             0.2845   0.1935   0.1743   0.1639   0.1837
+## Detection Rate         0.2845   0.1935   0.1737   0.1639   0.1837
+## Detection Prevalence   0.2845   0.1941   0.1737   0.1639   0.1837
+## Balanced Accuracy      1.0000   0.9996   0.9982   1.0000   1.0000</code></pre>
+<p>Here we have an accuracy of .9994 which is very strong. Hence, we will use our random forest prediction. We would also expect a sample error of 0.06% from the calculation: ((1-.9994)*100). Now lets use this model on our test data.</p>
+<pre class="r"><code>finalpredict &lt;- predict(fit2, test)
+finalpredict</code></pre>
+<pre><code>## 22  3  4  5  6  7  8  9 10 11 12 13 14 15 16 17 18 19 20 21 
+##  B  A  B  A  A  E  D  B  A  A  B  C  B  A  E  E  A  B  B  B 
+## Levels: A B C D E</code></pre>
 </div>
 
 
